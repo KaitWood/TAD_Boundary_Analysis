@@ -1,0 +1,182 @@
+---
+title: "Functions For Data Anlaysis"
+author: "Kaitlin Wood"
+---
+
+```{r}
+chromlist = c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,'X','Y')
+```
+
+## ChromCross: For Analysis of Enhancer:Promoter Interactions (enhs:prom) with respect to: 
+  -shared TAD Boundaries
+  -unique IMR90 Boundaries
+  -unique hESC Boundaries
+```{r}
+chromosome = c()
+TAD.num = c()
+enhs.num = c()
+enhs.interact = c()
+enhs.encompassed = c()
+enhs.engulfed = c()
+chromFrame = data.frame(chromosome, TAD.num, enhs.num, enhs.interact, enhs.encompassed, enhs.engulfed)    
+```
+```{r}
+## Where chromStart and chromEnd define the range of the enhancer to promoter interaction
+ChromCross = function(i, frame, tads, enhs){
+  # Define TAD boundaries and enhancer:promoter interactions in a chromsome specific manner
+  gr.bound = tads[seqnames(tads)==paste("chr",as.character(i),sep="")]
+  ir.TAD = IRanges(start = start(gr.bound), end = end(gr.bound))
+  
+  enhs.chr = enhs[seqnames(enhs)==paste("chr",as.character(i),sep="")]
+  ir.enhs = IRanges(start = enhs.chr$chromStart, end = enhs.chr$chromEnd)
+
+  # Collecting Interactions by Type 
+  x = findOverlapPairs(ir.enhs, ir.TAD)
+  x.enhs = first(findOverlapPairs(ir.enhs, ir.TAD))
+  x.tad = (second(findOverlapPairs(ir.enhs, ir.TAD)))
+  max.ovlp = (IRanges(start = pmin(start(first(x)), start(second(x))), end = pmax(end(first(x)), end(second(x)))))
+
+  enhs.x = unique(x.enhs)
+  TAD.x = unique(x.tad)
+  enhs.full = unique(x.enhs[start(x.enhs)==start(max.ovlp)& end(x.enhs)==end(max.ovlp)])
+  TAD.full = unique(x.tad[start(x.tad)==start(max.ovlp) & end(x.tad)==end(max.ovlp)])
+  enhs.flanked = unique(x.enhs[start(x.enhs) > start(max.ovlp) & end(x.enhs) < end(max.ovlp)])
+    
+  # Storing new data
+    chromosome = append(chromosome, as.character(i))
+    TAD.num = append(TAD.num, length(ir.TAD))
+    enhs.num = append(enhs.num, length(ir.enhs))
+    enhs.interact = append(enhs.interact, length(enhs.x))
+    enhs.encompassed = append(enhs.encompassed, length(enhs.full))
+    enhs.engulfed = append(enhs.engulfed, length(enhs.flanked))
+    
+    frame = data.frame(chromosome, TAD.num, enhs.num, enhs.interact, enhs.encompassed, enhs.engulfed)  
+    return(frame)
+    }
+```
+
+
+## XdBound: function for analysis of TAD Boundaries with respect to:
+  - all enhs:promoter ranges from Fantom5 data set
+```{r}
+chromosome = c()
+enhs.num = c()
+bound.num = c()
+bound.interact = c()
+bound.crossed = c()
+TADframe = data.frame(chromosome, enhs.num, bound.num, bound.interact, bound.crossed)
+```
+```{r}
+XdBound = function(i, frame, enhs, TAD){
+  # Define TAD boundaries and enhancer:promoter interactions in a chromsome specific manner
+  chr.TAD = TAD[seqnames(TAD)==paste("chr",as.character(i),sep="")]
+  ir.TAD = IRanges(start = start(chr.TAD), end = end(chr.TAD))
+  
+  enhs.chr = enhs[seqnames(enhs)==paste("chr",as.character(i),sep="")]
+  ir.enhs = IRanges(start = enhs.chr$chromStart, end = enhs.chr$chromEnd)
+
+  # Collecting Interactions by Type 
+  x = findOverlapPairs(ir.enhs, ir.TAD)
+  x.enhs = first(findOverlapPairs(ir.enhs, ir.TAD))
+  x.tad = (second(findOverlapPairs(ir.enhs, ir.TAD)))
+  max.ovlp = (IRanges(start = pmin(start(first(x)), start(second(x))), end = pmax(end(first(x)), end(second(x)))))
+
+  TAD.interact = unique(x.tad)
+  TAD.crossed = unique(x.tad[start(x.tad) > start(max.ovlp) & end(x.tad) < end(max.ovlp)])
+    
+  # Storing new data
+    chromosome = append(chromosome, as.character(i))
+    enhs.num = append(enhs.num, length(ir.enhs))
+    bound.num = append(bound.num, length(ir.TAD))
+    bound.interact = append(bound.interact, length(TAD.interact))
+    bound.crossed = append(bound.crossed, length(TAD.crossed))
+    
+    frame = data.frame(chromosome, enhs.num, bound.num, bound.interact, bound.crossed)
+    return(frame)
+    }
+```
+
+
+# XdBound.gene: modified for analysis of boundaries with respect to:
+  - the coding regions of hg19
+```{r}
+chromosome = c()
+gene.num = c()
+bound.num = c()
+bound.interact = c()
+bound.crossed = c()
+GeneFrame = data.frame(chromosome, gene.num, bound.num, bound.interact, bound.crossed)
+```
+```{r}
+XdBound.gene = function(i, frame, genes, TAD){
+  # Define TAD boundaries and enhancer:promoter interactions in a chromsome specific manner
+  chr.TAD = TAD[seqnames(TAD)==paste("chr",as.character(i),sep="")]
+  ir.TAD = IRanges(start = start(chr.TAD), end = end(chr.TAD))
+  
+  genes.chr = genes[seqnames(genes)==paste("chr",as.character(i),sep="")]
+  ir.genes = IRanges(start = start(genes.chr), end = end(genes.chr))
+
+  # Collecting Interactions by Type 
+  x = findOverlapPairs(ir.genes, ir.TAD)
+  x.genes = first(findOverlapPairs(ir.genes, ir.TAD))
+  x.tad = (second(findOverlapPairs(ir.genes, ir.TAD)))
+  max.ovlp = (IRanges(start = pmin(start(first(x)), start(second(x))), end = pmax(end(first(x)), end(second(x)))))
+
+  TAD.interact = unique(x.tad)
+  TAD.crossed = unique(x.tad[start(x.tad) > start(max.ovlp) & end(x.tad) < end(max.ovlp)])
+    
+  # Storing new data
+    chromosome = append(chromosome, as.character(i))
+    gene.num = append(gene.num, length(ir.genes))
+    bound.num = append(bound.num, length(ir.TAD))
+    bound.interact = append(bound.interact, length(TAD.interact))
+    bound.crossed = append(bound.crossed, length(TAD.crossed))
+    
+    frame = data.frame(chromosome, gene.num, bound.num, bound.interact, bound.crossed)
+    return(frame)
+    }
+```
+
+
+# XdBound.tx: modified for analysis of boundaries with respect to:
+  - the transcribed regions of hg19
+```{r}
+XdBound.tx = function(i, frame, genes, TAD){
+  # Define TAD boundaries and enhancer:promoter interactions in a chromsome specific manner
+  chr.TAD = TAD[seqnames(TAD)==paste("chr",as.character(i),sep="")]
+  ir.TAD = IRanges(start = start(chr.TAD), end = end(chr.TAD))
+  
+  genes.chr = genes[seqnames(genes)==paste("chr",as.character(i),sep="")]
+  ir.genes = IRanges(start = genes.chr$txStart, end = genes.chr$txEnd)
+
+  # Collecting Interactions by Type 
+  x = findOverlapPairs(ir.genes, ir.TAD)
+  x.genes = first(findOverlapPairs(ir.genes, ir.TAD))
+  x.tad = (second(findOverlapPairs(ir.genes, ir.TAD)))
+  max.ovlp = (IRanges(start = pmin(start(first(x)), start(second(x))), end = pmax(end(first(x)), end(second(x)))))
+
+  TAD.interact = unique(x.tad)
+  TAD.crossed = unique(x.tad[start(x.tad) > start(max.ovlp) & end(x.tad) < end(max.ovlp)])
+    
+  # Storing new data
+    chromosome = append(chromosome, as.character(i))
+    gene.num = append(gene.num, length(ir.genes))
+    bound.num = append(bound.num, length(ir.TAD))
+    bound.interact = append(bound.interact, length(TAD.interact))
+    bound.crossed = append(bound.crossed, length(TAD.crossed))
+    
+    frame = data.frame(chromosome, gene.num, bound.num, bound.interact, bound.crossed)
+    return(frame)
+    }
+```
+
+## Sum.function: To collect output from analytical functions into a single data frame
+```{r}
+sum.function = function(x){
+  DataSummary = data.frame()
+  for(i in seq_along(x)){
+    DataSummary = rbind(DataSummary, x[[i]])
+  }
+  return(DataSummary)
+  }
+```

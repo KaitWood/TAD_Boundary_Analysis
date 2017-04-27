@@ -1,0 +1,61 @@
+---
+title: "Object Preparation"
+author: "Kaitlin Wood"
+---
+
+Domain and Boundary objects generated from Dixon et al (2012, Nature)
+{http://www.nature.com.ezp.welch.jhmi.edu/nature/journal/v485/n7398/full/nature11082.html}
+Supplemental Material; SuppTable 9(shared boundaries), SuppTable 3(TADs), SuppTable 4(TAD boundaries)
+```{r}
+# gr.bound is the set of all TAD boundaries shared by hESCs and IMR90s as defined by Dixon (2012)
+TADbound = read.csv("Common hESC-IMR90 boundaries.csv", header = FALSE)
+ir.bound = IRanges(start = TADbound[,2], end = TADbound[,3])
+gr.bound = GRanges(ranges = ir.bound, seqnames = TADbound[,1])
+
+# gr.bound.hESC is the set of all hESC TAD boundaries as defined by Dixon (2012)
+TADbound.hESC = read.csv("boundaries.hESC.csv", header = FALSE)
+ir.bound.hESC = IRanges(start = TADbound.hESC[,2], end = TADbound.hESC[,3])
+gr.bound.hESC = GRanges(ranges = ir.bound.hESC, seqnames = TADbound.hESC[,1])
+
+# gr.bound.IMR90 is the set of all IMR90 TAD boundaries as defined by Dixon (2012)
+TADbound.IMR90 = read.csv("boundaries.IMR90.csv", header = FALSE)
+ir.bound.IMR90 = IRanges(start = TADbound.IMR90[,2], end = TADbound.IMR90[,3])
+gr.bound.IMR90 = GRanges(ranges = ir.bound.IMR90, seqnames = TADbound.IMR90[,1])
+
+# gr.domain.hESC is the set of hESC TADs as defined by Dixon (2012)
+TADdomain.hESC = read.csv("domains.hESC.csv", header = FALSE)
+ir.domain.hESC = IRanges(start = TADdomain.hESC[,2], end = TADdomain.hESC[,3])
+gr.domain.hESC = GRanges(ranges = ir.domain.hESC, seqnames = TADdomain.hESC[,1])
+
+# gr.domain.IMR90 is the set of IMR90 TADs as defined by Dixon (2012)
+TADdomain.IMR90 = read.csv("domains.IMR90.csv", header = FALSE)
+ir.domain.IMR90 = IRanges(start = TADdomain.IMR90[,2], end = TADdomain.IMR90[,3])
+gr.domain.IMR90 = GRanges(ranges = ir.domain.IMR90, seqnames = TADdomain.IMR90[,1])
+
+
+## Isolating the Boundaries Unique to IMR90 and hESC 
+#gr.IMR90.only is the set of TAD boundaries unique to IMR90 cells
+gr.IMR90.shared = unique(first(findOverlapPairs(gr.bound.IMR90, gr.bound)))
+gr.IMR90.only = gr.bound.IMR90[gr.bound.IMR90%over%gr.IMR90.only == F]
+
+#gr.hESC.only is the set of TAD boundaries unique to hESCs
+gr.hESC.shared = unique(first(findOverlapPairs(gr.bound.hESC, gr.bound)))
+gr.hESC.only = gr.bound.hESC[gr.bound.hESC%over%gr.hESC.only == F]
+```
+QC'd unique bounds
+```{r}
+IMR.1 = gr.IMR90.only[width(gr.IMR90.only)==1]
+IMR.qc = IRanges(start = start(IMR.1)-20000, end = end(IMR.1)+20000)
+IMR.qc = GRanges(ranges = IMR.qc, seqnames = seqnames(IMR.1))
+gr.IMR90.qcUnique = c(gr.IMR90.only[width(gr.IMR90.only)!=1], IMR.qc)
+#double-check
+findOverlapPairs(gr.IMR90.qcUnique, gr.bound)
+```
+```{r}
+hESC.1 = gr.hESC.only[width(gr.hESC.only)==1]
+hESC.qc = IRanges(start = start(hESC.1)-20000, end = end(hESC.1)+20000)
+hESC.qc = GRanges(ranges = hESC.qc, seqnames = seqnames(hESC.1))
+gr.hESC.qcUnique = c(gr.hESC.only[width(gr.hESC.only)!=1], hESC.qc)
+#double-check
+findOverlapPairs(gr.hESC.qcUnique, gr.bound)
+```

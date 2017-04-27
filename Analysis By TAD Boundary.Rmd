@@ -1,0 +1,87 @@
+---
+title: "Boundary Analysis"
+author: "Kaitlin Wood"
+---
+
+## Boundary Analysis, Shared TAD Boundaries with respect to:
+...all enhs:prom ranges
+```{r}
+enhs.TADbound = lapply(chromlist, XdBound, frame=TADframe, enhs=gr.enhs, TAD=gr.bound)
+  sum.bound.enhs = sum.function(enhs.TADbound)
+```
+...coding regions of hg19
+```{r}
+bound.gene = lapply(chromlist, XdBound.gene, frame=GeneFrame, genes=gr.hg19, TAD=gr.bound)
+  sum.bound.gene = sum.function(bound.gene)
+```
+...transcribed regions of hg19
+```{r}
+bound.tx = lapply(chromlist, XdBound.tx, frame=GeneFrame, genes=gr.hg19, TAD=gr.bound)
+  sum.bound.tx = sum.function(bound.tx)
+```
+
+
+## Boundary Analysis, Unique IMR90 TAD Boundaries with respect to:
+...all enhs:prom ranges
+```{r}
+chromosome = c()
+enhs.IMR90bound = lapply(chromlist, XdBound, frame=TADframe, enhs=gr.enhs, TAD=gr.IMR90.only)
+  sum.IMR90.enhs = sum.function(enhs.IMR90bound)
+```
+...coding regions of hg19
+```{r}
+IMR90.gene = lapply(chromlist, XdBound.gene, frame=GeneFrame, genes=gr.hg19, TAD=gr.IMR90.only)
+  sum.IMR90.gene = sum.function(IMR90.gene)
+```
+...transcribed regions of hg19
+```{r}
+IMR90.tx = lapply(chromlist, XdBound.tx, frame=GeneFrame, genes=gr.hg19, TAD=gr.IMR90.only)
+  sum.IMR90.tx = sum.function(IMR90.tx)
+```
+
+
+## Boundary Analysis, Unique IMR90 TAD Boundaries (width 1 converted to 40kb) with respect to:
+...all enhs:prom ranges
+```{r}
+enhs.IMR90.qc.bound = lapply(chromlist, XdBound, frame=TADframe, enhs=gr.enhs, TAD=gr.IMR90.qcUnique)
+  sum.IMR90.qc.enhs = sum.function(enhs.IMR90.qc.bound)
+```
+...coding regions of hg19
+```{r}
+chromosome = c()
+IMR90.qc.gene = lapply(chromlist, XdBound.gene, frame=GeneFrame, genes=gr.hg19, TAD=gr.IMR90.qcUnique)
+  sum.IMR90.qc.gene = sum.function(IMR90.qc.gene)
+```
+
+
+## Boundary Analysis, Unique hESC TAD Boundaries with respect to:
+...all enhs:prom ranges
+```{r}
+enhs.hESCbound = lapply(chromlist, XdBound, frame=TADframe, enhs=gr.enhs, TAD=gr.hESC.only)
+  sum.hESC.enhs = sum.function(enhs.hESCbound)
+```
+...coding regions of hg19
+```{r}
+chromosome = c()
+hESC.gene = lapply(chromlist, XdBound.gene, frame=GeneFrame, genes=gr.hg19, TAD=gr.hESC.only)
+  sum.hESC.gene = sum.function(hESC.gene)
+```
+...transcribed regions of hg19
+```{r}
+hESC.tx = lapply(chromlist, XdBound.tx, frame=GeneFrame, genes=gr.hg19, TAD=gr.hESC.only)
+  sum.hESC.tx = sum.function(hESC.tx)
+```
+
+
+## Boundary Analysis, Unique hESC TAD Boundaries (width 1 converted to 40kb) with respect to:
+...all enhs:prom ranges
+```{r}
+enhs.hESC.qc.bound = lapply(chromlist, XdBound, frame=TADframe, enhs=gr.enhs, TAD=gr.hESC.qcUnique)
+  sum.hESC.qc.enhs = sum.function(enhs.hESC.qc.bound)
+```
+...coding regions of hg19
+```{r}
+chromosome = c()
+hESC.qc.gene = lapply(chromlist, XdBound.gene, frame=GeneFrame, genes=gr.hg19, TAD=gr.hESC.qcUnique)
+  sum.hESC.qc.gene = sum.function(hESC.qc.gene)
+```

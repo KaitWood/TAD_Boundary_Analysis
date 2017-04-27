@@ -1,0 +1,32 @@
+---
+title: "enhs:prom Analysis"
+author: "Kaitlin Wood"
+---
+
+## Analysis of enhs:promoter interactions by 
+
+...by shared TAD Boundaries
+```{r}
+data = lapply(chromlist, ChromCross, frame=chromFrame, tads=gr.bound, enhs=gr.enhs)
+enhs.summary = sum.function(data)
+```
+...by unique IMR90 TAD Boundaries.
+```{r}
+data = lapply(chromlist, ChromCross, frame=chromFrame, tads=gr.IMR90.only, enhs=gr.enhs)
+enhs.IMR.summary = sum.function(data)
+```
+...by unique hESC TAD Boundaries.
+```{r}
+data = lapply(chromlist, ChromCross, frame=chromFrame, tads=gr.hESC.only, enhs=gr.enhs)
+enhs.hESC.summary = sum.function(data)
+```
+...by qc.unique IMR90 TAD Boundaries (1 adjusted to 40kb)
+```{r}
+data = lapply(chromlist, ChromCross, frame=chromFrame, tads=gr.IMR90.qcUnique, enhs=gr.enhs)
+enhs.IMR.qc.summary = sum.function(data)
+```
+...by qc.unique hESC TAD Boundaries (1 adjusted to 40kb)
+```{r}
+data = lapply(chromlist, ChromCross, frame=chromFrame, tads=gr.hESC.qcUnique, enhs=gr.enhs)
+enhs.hESC.qc.summary = sum.function(data)
+```
