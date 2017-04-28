@@ -1,0 +1,496 @@
+---
+title: "Graphical Representaion of Data"
+author: "Kaitlin Wood"
+---
+
+```{r}
+library(ggplot2)
+library(reshape2)
+library(RColorBrewer) 
+```
+## By Chromosome Graphical Analysis of Shared TAD Boundaries with Respect to all enhs:promoter interactions
+
+Broken down by choromosome, total height indicates the total number of boundaries on a given chromosome, 'interact' indicates the number of the total boundaries which overlap with an enhs:prom range, 'crossed' indicates the number of the total boundaries which are entirely encompassed/crossed by an enhs:prom range. 
+```{r}
+chromosome = sum.bound.enhs$chromosome
+  all = sum.bound.enhs$bound.num - sum.bound.enhs$bound.interact
+  interact = sum.bound.enhs$bound.interact - sum.bound.enhs$bound.crossed
+  crossed = sum.bound.enhs$bound.crossed
+enhs.bound = data.frame(chromosome, all, interact, crossed)
+graph.bound = melt(enhs.bound, id = "chromosome")
+```
+```{r}
+ggplot(graph.bound, aes(chromosome, value, fill = factor(variable))) +
+  geom_bar(stat = "identity") +
+  scale_fill_brewer(palette = "Paired") +
+  theme_bw() +  
+    theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14,hjust=0.5), 
+        plot.title=element_text(size=14,face='bold',hjust=0.5),
+        legend.text=element_text(size=11)) +
+  ggtitle("TAD Boundaries by Chromosome: Enhancer Interactions") +
+  xlab("Chromosome") +
+  ylab("Number of Boundaries")
+```
+```{r}
+ggplot(graph.bound, aes(chromosome, value, fill = factor(variable))) +
+  geom_bar(stat = "identity", position = "fill") +
+  scale_fill_brewer(palette = "Paired") +
+  theme_bw() +  
+    theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14,hjust=0.5), 
+        plot.title=element_text(size=14,face='bold',hjust=0.5),
+        legend.text=element_text(size=11)) +
+  ggtitle("TAD Boundaries by Chromosome: Enhancer Interactions") +
+  xlab("Chromosome") +
+  ylab("Fraction")
+```
+
+
+## Boundaries Crossed Total
+Accounting for the fraction of Boundaries (shared, unique to IMR90, and unique to hESC as defined by Dixon) with regard to interactions (all) and crossings by enhs:prom ranges and hg19 gene bodies. enhs:prom ranges defined in dataset from Fantom5/Andersson analysis, gene bodies definied as the cdsStart to cdsEnd of UCSC RefSeq calls.  
+```{r}
+Boundary = c('Shared', 'Shared', 'Unique IMR90', 'Unique IMR90', 'Unique hESC', 'Unique hESC')
+Boundary = factor(Boundary, levels = c('Shared', 'Unique IMR90', 'Unique hESC'))
+Interaction = c(rep(c('enhs','gene'),3))
+
+total = c(sum(sum.bound.enhs$bound.num), sum(sum.bound.gene$bound.num),
+        sum(sum.IMR90.enhs$bound.num),sum(sum.IMR90.gene$bound.num),
+        sum(sum.hESC.enhs$bound.num),sum(sum.hESC.gene$bound.num))
+
+interact = c(sum(sum.bound.enhs$bound.interact), sum(sum.bound.gene$bound.interact),
+        sum(sum.IMR90.enhs$bound.interact),sum(sum.IMR90.gene$bound.interact),
+        sum(sum.hESC.enhs$bound.interact),sum(sum.hESC.gene$bound.interact))
+
+crossed = c(sum(sum.bound.enhs$bound.crossed), sum(sum.bound.gene$bound.crossed),
+        sum(sum.IMR90.enhs$bound.crossed),sum(sum.IMR90.gene$bound.crossed),
+        sum(sum.hESC.enhs$bound.crossed),sum(sum.hESC.gene$bound.crossed))
+TotalCrossing = data.frame(Boundary,total,interact,crossed)
+cross.dat = melt(TotalCrossing, id = 'Boundary')
+cross.dat = data.frame(cross.dat,Interaction)
+```
+```{r}
+ggplot(cross.dat,aes(variable, value)) +
+  geom_bar(stat = "identity", position = "dodge", aes(fill = Interaction))+
+  scale_fill_brewer(palette = "Paired") +
+  facet_grid(.~Boundary) +
+  theme_bw() +
+    theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14,hjust=0.5), 
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_blank(),
+        plot.title=element_text(size=14,hjust=0.5),
+        legend.text=element_text(size=11),
+        strip.text = element_text(size=14),
+        strip.background = element_rect(fill="grey")) +  
+  ggtitle("TAD Boundaries vs.enhs:prom ranges") +
+  ylab("TAD Boundary Number") 
+```
+Boundary Analysis (Fraction)
+```{r}
+Boundary = c('Shared', 'Shared', 'Unique IMR90', 'Unique IMR90', 'Unique hESC', 'Unique hESC')
+Boundary = factor(Boundary, levels = c('Shared', 'Unique IMR90', 'Unique hESC'))
+Interaction = c(rep(c('enhs','gene'),3))
+all = c(sum(sum.bound.enhs$bound.num), sum(sum.bound.gene$bound.num),
+        sum(sum.IMR90.enhs$bound.num),sum(sum.IMR90.gene$bound.num),
+        sum(sum.hESC.enhs$bound.num),sum(sum.hESC.gene$bound.num))
+
+total = c(sum(sum.bound.enhs$bound.num), sum(sum.bound.gene$bound.num),
+        sum(sum.IMR90.enhs$bound.num),sum(sum.IMR90.gene$bound.num),
+        sum(sum.hESC.enhs$bound.num),sum(sum.hESC.gene$bound.num))/all
+
+interact = c(sum(sum.bound.enhs$bound.interact), sum(sum.bound.gene$bound.interact),
+        sum(sum.IMR90.enhs$bound.interact),sum(sum.IMR90.gene$bound.interact),
+        sum(sum.hESC.enhs$bound.interact),sum(sum.hESC.gene$bound.interact))/all
+
+crossed = c(sum(sum.bound.enhs$bound.crossed), sum(sum.bound.gene$bound.crossed),
+        sum(sum.IMR90.enhs$bound.crossed),sum(sum.IMR90.gene$bound.crossed),
+        sum(sum.hESC.enhs$bound.crossed),sum(sum.hESC.gene$bound.crossed))/all
+
+TotalCrossing = data.frame(Boundary,interact,crossed)
+cross.dat = melt(TotalCrossing, id = 'Boundary')
+cross.dat = data.frame(cross.dat,Interaction)
+```
+```{r}
+ggplot(cross.dat,aes(variable, value)) +
+  geom_point(aes(color = Interaction), size = 4)+
+  scale_color_brewer(palette = "Paired") +
+  facet_grid(.~Boundary) +
+  scale_y_continuous(limits = c(0,1)) +
+  theme_bw() +
+    theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14,hjust=0.5), 
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_blank(),
+        plot.title=element_text(size=14,hjust=0.5),
+        legend.text=element_text(size=11),
+        strip.text = element_text(size=14),
+        strip.background = element_rect(fill="grey")) +  
+  ggtitle("TAD Boundary Type") +
+  ylab("TAD Boundary Fraction") 
+```
+
+
+# Boundary Analysis Summary w/ respect to enhs:prom only
+```{r}
+Boundary = c('Shared','Unique IMR90', 'Unique hESC')
+Boundary = factor(Boundary, levels = c('Shared','Unique IMR90', 'Unique hESC'))
+
+all = c(sum(sum.bound.enhs$bound.num),
+        sum(sum.IMR90.enhs$bound.num),
+        sum(sum.hESC.enhs$bound.num))
+
+total = c(sum(sum.bound.enhs$bound.num), 
+        sum(sum.IMR90.enhs$bound.num),
+        sum(sum.hESC.enhs$bound.num))/all
+
+interact = c(sum(sum.bound.enhs$bound.interact),
+        sum(sum.IMR90.enhs$bound.interact),
+        sum(sum.hESC.enhs$bound.interact))/all
+
+crossed = c(sum(sum.bound.enhs$bound.crossed),
+        sum(sum.IMR90.enhs$bound.crossed),
+        sum(sum.hESC.enhs$bound.crossed))/all
+
+enhs.TAD.int = data.frame(Boundary, total, interact,crossed)
+enhs.TAD.int = melt(enhs.TAD.int, id = "Boundary")
+```
+# Dot Plot
+```{r}
+ggplot(enhs.TAD.int,aes(Boundary, value)) +
+  geom_point(aes(color = variable), size = 4)+
+  scale_color_brewer(palette = "Paired") +
+  #facet_grid(.~Boundary) +
+  theme_bw() +
+    theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14,hjust=0.5), 
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_blank(),
+        plot.title=element_text(size=14,hjust=0.5),
+        legend.text=element_text(size=11),
+        strip.text = element_text(size=14),
+        strip.background = element_rect(fill="grey")) +  
+  ggtitle("TAD Boundaries Compared to enhs:prom ranges") +
+  ylab("TAD Boundary Fraction") +
+  xlab("TAD Boundary Type")
+```
+
+# Boundary Analysis Summary w/ respect to enhs:prom
+  Boundary width 1 adjusted to 40 kb
+```{r}
+Boundary = c('Shared','Unique IMR90', 'Unique hESC')
+Boundary = factor(Boundary, levels = c('Shared','Unique IMR90', 'Unique hESC'))
+
+all = c(sum(sum.bound.enhs$bound.num),
+        sum(sum.IMR90.qc.enhs$bound.num),
+        sum(sum.hESC.qc.enhs$bound.num))
+
+total = c(sum(sum.bound.enhs$bound.num), 
+        sum(sum.IMR90.qc.enhs$bound.num),
+        sum(sum.hESC.qc.enhs$bound.num))/all
+
+interact = c(sum(sum.bound.enhs$bound.interact),
+        sum(sum.IMR90.qc.enhs$bound.interact),
+        sum(sum.hESC.qc.enhs$bound.interact))/all
+
+crossed = c(sum(sum.bound.enhs$bound.crossed),
+        sum(sum.IMR90.qc.enhs$bound.crossed),
+        sum(sum.hESC.qc.enhs$bound.crossed))/all
+
+enhs.TAD.int = data.frame(Boundary, total, interact,crossed)
+enhs.TAD.int = melt(enhs.TAD.int, id = "Boundary")
+```
+```{r}
+ggplot(enhs.TAD.int,aes(Boundary, value)) +
+  geom_point(aes(color = variable), size = 4)+
+  scale_color_brewer(palette = "Paired") +
+  #facet_grid(.~Boundary) +
+  theme_bw() +
+    theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14,hjust=0.5), 
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_blank(),
+        plot.title=element_text(size=14,hjust=0.5),
+        legend.text=element_text(size=11),
+        strip.text = element_text(size=14),
+        strip.background = element_rect(fill="grey")) +  
+  ggtitle("TAD Boundaries Compared to enhs:prom ranges") +
+  ylab("TAD Boundary Fraction") +
+  xlab("TAD Boundary Type")
+```
+
+
+## Analysis of enhs:prom ranges with respect to Boundary Type
+```{r}
+Boundary = c('Shared','Unique IMR90', 'Unique hESC')
+Boundary = factor(Boundary, levels = c('Shared','Unique IMR90', 'Unique hESC'))
+
+all = c(sum(enhs.summary$enhs.num),
+        sum(enhs.IMR.summary$enhs.num),
+        sum(enhs.hESC.summary$enhs.num))
+
+total = c(sum(enhs.summary$enhs.num),
+        sum(enhs.IMR.summary$enhs.num),
+        sum(enhs.hESC.summary$enhs.num))/all
+interact = c(sum(enhs.summary$enhs.interact),
+        sum(enhs.IMR.summary$enhs.interact),
+        sum(enhs.hESC.summary$enhs.interact))/all
+encompassing = c(sum(enhs.summary$enhs.encompassed),
+        sum(enhs.IMR.summary$enhs.encompassed),
+        sum(enhs.hESC.summary$enhs.encompassed))/all
+engulfed = c(sum(enhs.summary$enhs.engulfed),
+        sum(enhs.IMR.summary$enhs.engulfed),
+        sum(enhs.hESC.summary$enhs.engulfed))/all
+
+enhs.data = data.frame(Boundary, total,interact,encompassing,engulfed)
+enhs.graph = melt(enhs.data, id = 'Boundary')
+```
+# Bar Plot
+```{r}
+ggplot(enhs.graph, aes(variable, value))+
+  geom_bar(stat = "identity", aes(fill = variable)) +
+  scale_fill_brewer(palette = "Accent")+
+  facet_grid(.~Boundary) +
+  theme_bw() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=16,hjust=0.5), 
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_blank(),
+        plot.title=element_text(size=14,hjust=0.5),
+        legend.text=element_text(size=11),
+        strip.text = element_text(size=14),
+        strip.background = element_rect(fill="lightgrey")) +  
+  ggtitle("TAD Boundary Type") +
+  ylab("enhs:promoter Ranges") 
+```
+# Dot Plot
+```{r}
+ggplot(enhs.graph, aes(Boundary, value))+
+  geom_point(aes(color = variable), size =4) +
+  scale_color_brewer(palette = "Accent")+
+  theme_bw() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=16,hjust=0.5), 
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_blank(),
+        plot.title=element_text(size=14,hjust=0.5),
+        legend.text=element_text(size=11),
+        strip.text = element_text(size=14),
+        strip.background = element_rect(fill="lightgrey")) +  
+  ggtitle("Enhs:prom Ranges Interactions by Boundary Type") +
+  ylab("Fraction of enhs:promoter Ranges") 
+```
+
+
+# Analysis of enhs:prom ranges with respect to Boundary Type and width of 1 adjusted to 40 kb
+```{r}
+Boundary = c('Shared','Unique IMR90', 'Unique hESC')
+Boundary = factor(Boundary, levels = c('Shared','Unique IMR90', 'Unique hESC'))
+
+all = c(sum(enhs.summary$enhs.num),
+        sum(enhs.IMR.qc.summary$enhs.num),
+        sum(enhs.hESC.qc.summary$enhs.num))
+
+total = c(sum(enhs.summary$enhs.num),
+        sum(enhs.IMR.qc.summary$enhs.num),
+        sum(enhs.hESC.qc.summary$enhs.num))/all
+interact = c(sum(enhs.summary$enhs.interact),
+        sum(enhs.IMR.qc.summary$enhs.interact),
+        sum(enhs.hESC.qc.summary$enhs.interact))/all
+encompassing = c(sum(enhs.summary$enhs.encompassed),
+        sum(enhs.IMR.qc.summary$enhs.encompassed),
+        sum(enhs.hESC.qc.summary$enhs.encompassed))/all
+engulfed = c(sum(enhs.summary$enhs.engulfed),
+        sum(enhs.IMR.qc.summary$enhs.engulfed),
+        sum(enhs.hESC.qc.summary$enhs.engulfed))/all
+
+enhs.data = data.frame(Boundary, total,interact,encompassing,engulfed)
+enhs.graph = melt(enhs.data, id = 'Boundary')
+```
+```{r}
+ggplot(enhs.graph, aes(Boundary, value))+
+  geom_point(aes(color = variable), size =4) +
+  scale_color_brewer(palette = "Accent")+
+  theme_bw() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=16,hjust=0.5), 
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_blank(),
+        plot.title=element_text(size=14,hjust=0.5),
+        legend.text=element_text(size=11),
+        strip.text = element_text(size=14),
+        strip.background = element_rect(fill="lightgrey")) +  
+  ggtitle("Enhs:prom Ranges Interactions by Boundary Type") +
+  ylab("Fraction of enhs:promoter Ranges") 
+```
+
+
+## How does subsetting the data by tissue-specific enhancers influence the analysis
+There are data-sets available containing enhaners specifc to cell and tissue types. The link to gene promoters is not made explict but I subset my gr.enhs enhs:prom ranges by lung and brain specific enhancers and repeated the data analysis.
+Conclusions: THe subset of Tissue-specific enhancers interacts with TAD-boundaries at approximately the same frequency as the enitre enhs:prom set. Fewer TAD-boundaries are crossed by this subset, but I'm reducing the number of ranges analyzed from ~66,000 to ~500. 
+
+# Analysis by enhs:prom ranges of Lung-specific enhs
+```{r}
+Boundary = c('Shared','Unique IMR90', 'Unique hESC')
+Boundary = factor(Boundary, levels = c('Shared','Unique IMR90', 'Unique hESC'))
+
+all = c(sum(lung.shared.sum$enhs.num),
+        sum(lung.IMR90.sum$enhs.num),
+        sum(lung.hESC.sum$enhs.num))
+
+total = c(sum(lung.shared.sum$enhs.num),
+        sum(lung.IMR90.sum$enhs.num),
+        sum(lung.hESC.sum$enhs.num))/all
+interact = c(sum(lung.shared.sum$enhs.interact),
+        sum(lung.IMR90.sum$enhs.interact),
+        sum(lung.hESC.sum$enhs.interact))/all
+encompassing = c(sum(lung.shared.sum$enhs.encompassed),
+        sum(lung.IMR90.sum$enhs.encompassed),
+        sum(lung.hESC.sum$enhs.encompassed))/all
+engulfed = c(sum(lung.shared.sum$enhs.engulfed),
+        sum(lung.IMR90.sum$enhs.engulfed),
+        sum(lung.hESC.sum$enhs.engulfed))/all
+
+lung.enhs.data = data.frame(Boundary, total,interact,encompassing,engulfed)
+lung.enhs.graph = melt(lung.enhs.data, id = 'Boundary')
+```
+```{r}
+ggplot(lung.enhs.graph, aes(Boundary, value)) +
+  geom_point(aes(color = variable), size =3.5) +
+  scale_color_brewer(palette = "Accent") +
+  theme_bw()+
+  scale_y_continuous() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=16,hjust=0.5), 
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_blank(),
+        plot.title=element_text(size=14,hjust=0.5),
+        legend.text=element_text(size=11)) +  
+  ggtitle("Enhancer:Promoter Interactions Unique to Lung Tissue") +
+  ylab("Fraction enhs:promoter Ranges") +
+  xlab("Type of TAD Boundary")
+```
+
+# Analysis by enhs:prom ranges of Brain-specific enhs
+```{r}
+Boundary = c('Shared','Unique IMR90', 'Unique hESC')
+Boundary = factor(Boundary, levels = c('Shared','Unique IMR90', 'Unique hESC'))
+
+all = c(sum(brain.shared.sum$enhs.num),
+        sum(brain.IMR90.sum$enhs.num),
+        sum(brain.hESC.sum$enhs.num))
+
+total = c(sum(brain.shared.sum$enhs.num),
+        sum(brain.IMR90.sum$enhs.num),
+        sum(brain.hESC.sum$enhs.num))/all
+interact = c(sum(brain.shared.sum$enhs.interact),
+        sum(brain.IMR90.sum$enhs.interact),
+        sum(brain.hESC.sum$enhs.interact))/all
+encompassing = c(sum(brain.shared.sum$enhs.encompassed),
+        sum(brain.IMR90.sum$enhs.encompassed),
+        sum(brain.hESC.sum$enhs.encompassed))/all
+engulfed = c(sum(brain.shared.sum$enhs.engulfed),
+        sum(brain.IMR90.sum$enhs.engulfed),
+        sum(brain.hESC.sum$enhs.engulfed))/all
+
+brain.enhs.data = data.frame(Boundary, total,interact,encompassing,engulfed)
+brain.enhs.graph = melt(brain.enhs.data, id = 'Boundary')
+```
+```{r}
+ggplot(brain.enhs.graph, aes(Boundary, value)) +
+  geom_point(aes(color = variable), size =3.5) +
+  scale_color_brewer(palette = "Accent") +
+  theme_bw()+
+  scale_y_continuous() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=16,hjust=0.5), 
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_blank(),
+        plot.title=element_text(size=14,hjust=0.5),
+        legend.text=element_text(size=11)) +  
+  ggtitle("Enhancer:Promoter Interactions Unique to Brain Tissue") +
+  ylab("Fraction enhs:promoter Ranges") +
+  xlab("Type of TAD Boundary")
+```
+
+# Analysis by Boundaries of Lung-specific enhs
+```{r}
+Boundary = c('Shared','Unique IMR90', 'Unique hESC')
+Boundary = factor(Boundary, levels = c('Shared','Unique IMR90', 'Unique hESC'))
+
+all = c(sum(shared.bound.lung$bound.num),
+        sum(IMR90.bound.lung$bound.num),
+        sum(hESC.bound.lung$bound.num))
+
+total = c(sum(shared.bound.lung$bound.num), 
+        sum(IMR90.bound.lung$bound.num),
+        sum(hESC.bound.lung$bound.num))/all
+
+interact = c(sum(shared.bound.lung$bound.interact),
+        sum(IMR90.bound.lung$bound.interact),
+        sum(hESC.bound.lung$bound.interact))/all
+
+crossed = c(sum(shared.bound.lung$bound.crossed),
+        sum(IMR90.bound.lung$bound.crossed),
+        sum(hESC.bound.lung$bound.crossed))/all
+
+lung.bound = data.frame(Boundary, total, interact, crossed)
+lung.bound.graph = melt(lung.bound, id = "Boundary")
+```
+```{r}
+ggplot(lung.bound.graph, aes(Boundary, value)) +
+  geom_point(aes(color = variable), size =3.5) +
+  scale_color_brewer(palette = "Paired") +
+  theme_bw()+
+  scale_y_continuous(1) +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=16,hjust=0.5), 
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_blank(),
+        plot.title=element_text(size=14,hjust=0.5),
+        legend.text=element_text(size=11)) +  
+  ggtitle("TAD-Boundaries Against Lung enhs:prom Interactions") +
+  ylab("Fraction TAD Boundaries") +
+  xlab("Type of TAD Boundary")
+```
+
+# Analysis by Boundaries of Brain-specific enhs
+```{r}
+Boundary = c('Shared','Unique IMR90', 'Unique hESC')
+Boundary = factor(Boundary, levels = c('Shared','Unique IMR90', 'Unique hESC'))
+
+all = c(sum(shared.bound.brain$bound.num),
+        sum(IMR90.bound.brain$bound.num),
+        sum(hESC.bound.brain$bound.num))
+
+total = c(sum(shared.bound.brain$bound.num), 
+        sum(IMR90.bound.brain$bound.num),
+        sum(hESC.bound.brain$bound.num))/all
+
+interact = c(sum(shared.bound.brain$bound.interact),
+        sum(IMR90.bound.brain$bound.interact),
+        sum(hESC.bound.brain$bound.interact))/all
+
+crossed = c(sum(shared.bound.brain$bound.crossed),
+        sum(IMR90.bound.brain$bound.crossed),
+        sum(hESC.bound.brain$bound.crossed))/all
+
+brain.bound = data.frame(Boundary, total, interact, crossed)
+brain.bound.graph = melt(brain.bound, id = "Boundary")
+```
+```{r}
+ggplot(brain.bound.graph, aes(Boundary, value)) +
+  geom_point(aes(color = variable), size =3.5) +
+  scale_color_brewer(palette = "Paired") +
+  theme_bw()+
+  scale_y_continuous(1) +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=16,hjust=0.5), 
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_blank(),
+        plot.title=element_text(size=14,hjust=0.5),
+        legend.text=element_text(size=11)) +  
+  ggtitle("TAD-Boundaries Against Brain enhs:prom Interactions") +
+  ylab("Fraction TAD Boundaries") +
+  xlab("Type of TAD Boundary")
+```
